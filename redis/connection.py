@@ -491,7 +491,7 @@ class Connection(object):
                  socket_type=0, retry_on_timeout=False, encoding='utf-8',
                  encoding_errors='strict', decode_responses=False,
                  parser_class=DefaultParser, socket_read_size=65536,
-                 health_check_interval=0):
+                 health_check_interval=300):
         self.pid = os.getpid()
         self.host = host
         self.port = int(port)
@@ -642,15 +642,20 @@ class Connection(object):
         if self.health_check_interval and time() > self.next_health_check:
             try:
                 self.send_command('PING', check_health=False)
-                if nativestr(self.read_response()) != 'PONG':
+                response = self.read_response()
+                if isinstance(response, list):
+                    response = response[0]
+                if nativestr(response) != 'PONG':
                     raise ConnectionError(
                         'Bad response from PING health check')
             except (ConnectionError, TimeoutError) as ex:
                 self.disconnect()
                 self.send_command('PING', check_health=False)
-                if nativestr(self.read_response()) != 'PONG':
-                    raise ConnectionError(
-                        'Bad response from PING health check')
+                response = self.read_response()
+                if isinstance(response, list):
+                    response = response[0]
+                if nativestr(response) != 'PONG':
+                    print('Warning: Bad response from PING health check')
 
     def send_packed_command(self, command, check_health=True):
         "Send an already packed command to the Redis server"

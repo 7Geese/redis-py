@@ -3151,7 +3151,7 @@ class PubSub(object):
             # were listening to when we were disconnected
             self.connection.register_connect_callback(self.on_connect)
         connection = self.connection
-        kwargs = {'check_health': not self.subscribed}
+        kwargs = {'check_health': True}
         self._execute(connection, connection.send_command, *args, **kwargs)
 
     def _execute(self, connection, command, *args, **kwargs):
